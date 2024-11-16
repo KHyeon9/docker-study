@@ -1,0 +1,53 @@
+# 도커 컴포즈 파일을 작성하면 해당 파일안에 있는 모든 서비스를 묶어서 네트워크에 추가함
+version: '3.8'
+services:
+  mongodb:
+    image: 'mongo'
+    volumes: 
+      - data:/data/db # 명명된 볼륨
+    container_name: mongodb # 강제로 컨테이너 네임 지정
+    # 환경 변수 설정
+    # environment:
+    #   MONGO_INITDB_ROOT_USERNAME: hyeon
+    #   MONGO_INITDB_ROOT_PASSWORD: secret
+    # 환경 변수 파일 지정하기
+    env_file:
+      - ./env/mongo.env
+  backend:
+    build: ./backend
+    # 도커 피알의 명이 Dockerfile이 아닌경우 아래와 같이 사용하여 알림
+    # build: 
+    #   context: ./backend
+    #   dockerfile: Dockerfile
+    # args사용시에는 아래와 같이 사용
+    # args: 
+    #   some-arg: 1
+    ports:
+      - '80:80'
+    volumes:
+      - logs:/app/logs # 명명된 볼륨
+      - ./backend:/app # 바인드 마운트(아래 볼륨에 선언할 필요 X)
+      - /app/node_modules # 익명 볼륨
+    env_file:
+      - ./env/backend.env
+    # 이 컨테이너가 다른 컨테이너에 의존한 경우 지정한 컨테이너가 생성되고 생성되도록 설정
+    depends_on:
+      - mongodb
+  frontend:
+    build: ./frontend
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./frontend/src:/app/src
+    # -it 즉, 인터렉티브 모드를 설정
+    stdin_open: true # 개방형 입력 연결을 위한 터미널 설정
+    tty: true # 위 터미널에 연결을 위한 설정
+    depends_on:
+      - backend
+    environment:
+      NODE_OPTIONS: --openssl-legacy-provider
+
+# 서비스를 생성할 때, 명명된 볼륨을 인식하기 위해 선언해줘야 함
+volumes:
+  data: 
+  logs:

@@ -1,0 +1,64 @@
+---------------------
+Network 생성
+---------------------
+
+docker network create goals-net
+
+---------------------
+MongoDB Container 실행
+---------------------
+
+docker run --name mongodb \
+  -e MONGO_INITDB_ROOT_USERNAME=hyeon \
+  -e MONGO_INITDB_ROOT_PASSWORD=secret \
+  -v data:/data/db \
+  --rm \
+  -d \
+  --network goals-net \
+  mongo
+
+---------------------
+Node API Image 빌드
+---------------------
+
+docker build -t goals-node .
+
+---------------------
+Node API Container 실행
+---------------------
+
+docker run --name goals-backend \
+  -e MONGODB_USERNAME=hyeon \
+  -e MONGODB_PASSWORD=secret \
+  -v logs:/app/logs \
+  -v C:\Users\Hyeon\Desktop\folder\coding\docker-study\compose-01-starting-setup\backend:/app \
+  -v /app/node_modules \
+  --rm \
+  -d \
+  --network goals-net \
+  -p 80:80 \
+  goals-node
+
+---------------------
+React SPA Image 빌드
+---------------------
+
+docker build -t goals-react .
+
+---------------------
+React SPA Container 실행
+---------------------
+
+docker run --name goals-frontend \
+  -v C:\Users\Hyeon\Desktop\folder\coding\docker-study\compose-01-starting-setup\frontend\src:/app/src \
+  --rm \
+  -d \
+  -p 3000:3000 \
+  -it \
+  goals-react
+
+---------------------
+모든 Containers 삭제
+---------------------
+
+docker stop mongodb goals-backend goals-frontend

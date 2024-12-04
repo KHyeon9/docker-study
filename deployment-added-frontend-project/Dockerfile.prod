@@ -1,0 +1,29 @@
+# 프로덕션 환경에서 사용할 도커 파일
+FROM node:14-alpine as build
+
+WORKDIR /app
+
+COPY pakage.json .
+
+RUN npm install
+
+COPY . .
+
+# start로 실행 하게 작은 서버를 제공하는 등 되면 많은 리소스를 사용하게 되므로 프로덕션 환경에 어울리지 않음
+# 그래서 빌드를 통해 변환 및 최적화된 파일을 내보냄
+# 이후 우리가 선택한 웹 서버를 통해서 스스로 서비스 제공
+# 멀티 스테이지 빌드에서는 cmd 대신 run을 사용
+RUN npm run build
+
+# 최적화된 파일이 생성된후 node가 빌드 시에만 필요하므로 다른 이미지로 변경
+# from을 다시 입력하면 새 베이스 이미지로 전환
+# 따라서 node를 빌드시에 사용하고 다시 nginx로 이미지 변경
+FROM nginx:stable-alpine
+
+# --from 명령어를 통해서 build의 최종 콘텐츠를 복사
+# nginx에 있는 폴더로 복사 => 아래 폴더는 nginx가 파일을 제공하려 하는 디폴트 폴더
+COPY --from=build /app/build /user/share/nginx/html
+
+EXPOSE 80
+
+CMD [ "nginx", "-g", "daemon off;" ]

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment # 새로 만들 객체를 deployment로 설정
+metadata:
+  name: second-app-deployment # deployment의 이름 설정
+spec: # depolyment의 spec 설정
+  replicas: 1 # 처음 실행 될때 생성될 pod의 갯수 default는 1
+  selector: # depolyment는 pod를 관리하는데 selector를 통해서 제어할 pod를 선택
+    matchLabels: # deployment로 제어되어야 하는 pod의 label을 작성
+      app: second-app
+      tier: backend
+  template: # template를 통해서 생성할 pod 정의, deployment의 template는 항상 pod를 말하므로 kind가 필요없음
+    metadata:  # 쿠버네티스의 새로운 객체이기 때문에 metadata로 정의
+      labels: # key, value값을 추가
+        app: second-app
+        tier: backend
+    spec: # 생성될 pod의 대한 spec 설정
+      containers: 
+        - name: second-node # 각 컨테이너의 이름 지정
+          image: mrk0607/kub-first-app:2 # 그 컨테이너를 만들 image 지정
+        # 아래와 같이 여러개의 이름과 사용할 image를 추가할 수 있음
+        # - name: ...
+        #   image: ...

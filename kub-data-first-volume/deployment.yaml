@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: story-deployment
+spec: 
+  replicas: 1
+  selector:
+    matchLabels:
+      app: story
+  template:
+    metadata:
+      labels:
+        app: story
+    spec:
+      containers:
+        - name: story
+          image: mrk0607/kub-data-demo:1
+          # 컨테이너에 마운트할 볼륨을 연결
+          volumeMounts:
+            # 마운트될 컨테이너의 내부 경로
+            - mountPath: /app/story
+              #  마운트할 볼륨의 이름 지정
+              name: story-volume
+      # volume 추가 -> 그 pod의 모든 컨테이너가 volume을 사용할 수 있음
+      volumes:
+        # 이름 설정
+        - name: story-volume
+          # 볼륨 외에 볼륨 유형을 설정해야함
+          # emptyDir유형 사용으로 pod 실행시 단순히 빈 디렉토리를 사용
+          # pod가 살아있는 한, 이 디렉토리를 유지하고 데이터로 채움
+          emptyDir: {}
+          # 단, replicas의 값이 2이상인 경우 문제 발생합니다.
+          # 에러가 발생하는 등의 이유로 다른 pod로 리다이랙션이 될 경우 데이터가 손실됨

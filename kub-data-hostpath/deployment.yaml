@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: story-deployment
+spec: 
+  replicas: 2
+  selector:
+    matchLabels:
+      app: story
+  template:
+    metadata:
+      labels:
+        app: story
+    spec:
+      containers:
+        - name: story
+          image: academind/kub-data-demo:1
+          volumeMounts:
+            - mountPath: /app/story
+              name: story-volume
+
+      volumes:
+        - name: story-volume
+          # hostPath는 2개의 key, value가 필요함
+          # 이 셋팅의 경우 여러개의 pod가 하나의 동일한 경로를 공유하여 replicas가 2개 이상이더라도 작동함
+          hostPath:
+            # 바인드 마운트와 비슷하게 컨테이너 내부의 경로에 바인딩 할 수 있음
+            # hostPath는 항상 새로운 빈 경로를 생성하지 않음으로 경로와 폴더 내부의 모든 겻을 이 경로와 공유
+            # 따라서 이미 존재하는 특정 데이터도 공유 가능
+            # 하지만 리눅스의 예약된 경로 같은걸 사용하면 안됨
+            path: /data
+            # 존재하는 디렉토리 혹은 존재하지 않는다면 생성되어야 함을 알림
+            type: DirectoryOrCreate
+            # 만약 Directory로만 설정했을 경우 디렉토리가 없는 경우 에러 발생
+            # 단점으로는 여러 워커 노드가 있거나 큰 클러스터의 경우 hostPath는
+            # 여전히 노드에 특정적입니다. 즉, 다른 노드에서 공유가 불가능합니다.

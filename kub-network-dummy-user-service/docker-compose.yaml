@@ -1,0 +1,19 @@
+version: "3"
+services:
+  auth:
+    build: ./auth-api
+  users:
+    build: ./users-api
+    # docker compose에 설정된 이름(auth)로 환경 변수를 셋팅하면 
+    # 쿠버네티스가 이것을 사용하여 구동할 때, 다른 값으로 변경해줌
+    environment:
+      AUTH_ADDRESS: auth
+    ports: 
+      - "8080:8080"
+  tasks:
+    build: ./tasks-api
+    ports: 
+      - "8000:8000"
+    environment:
+      TASKS_FOLDER: tasks
+    

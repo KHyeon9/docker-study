@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: users-deployment
+spec:
+  replicas: 1
+  selector: 
+    matchLabels:
+      app: users
+  template:
+    metadata:
+      labels:
+        app: users
+    spec:
+      containers:
+        - name: users
+          image: mrk0607/kub-demo-users:latest
+        # deployment를 auth로 만들게 되면 pod가 하나 더 생기므로
+        # 설계시 users와 auth가 같은 pod로 하도록 했으므로 여기에 컨테이너 추가
+        - name: auth
+          image: mrk0607/kub-demo-auth:latest

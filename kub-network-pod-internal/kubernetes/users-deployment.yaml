@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: users-deployment
+spec:
+  replicas: 1
+  selector: 
+    matchLabels:
+      app: users
+  template:
+    metadata:
+      labels:
+        app: users
+    spec:
+      containers:
+        - name: users
+          image: mrk0607/kub-demo-users:latest
+          # 쿠버네티스에서 환경 변수를 사용하기 위한 셋팅
+          env:
+            - name: AUTH_ADDRESS
+              # 쿠버네티스에는 localhost 주소를 통해서 동일한 pod의 다른 컨테이너와 
+              # 통신하여 사용할 수 있음
+              # value: localhost
+              # auth를 분리하면서 auth-service를 통해 고정된 아이피를 입력
+              value: "10.105.23.28"
+        # auth도 같이 컨테이너 생성
+        # - name: auth
+        #   image: mrk0607/kub-demo-auth:latest

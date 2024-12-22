@@ -1,0 +1,19 @@
+version: "3"
+services:
+  auth:
+    build: ./auth-api
+  users:
+    build: ./users-api
+    environment:
+      AUTH_ADDRESS: auth
+      # 쿠버네티스에서는 작동하지만 docker-compose에는 환경 변수를 이렇게 직접 입력해 줘야함
+      AUTH_SERVICE_SERVICE_HOST: auth
+    ports: 
+      - "8080:8080"
+  tasks:
+    build: ./tasks-api
+    ports: 
+      - "8000:8000"
+    environment:
+      TASKS_FOLDER: tasks
+    

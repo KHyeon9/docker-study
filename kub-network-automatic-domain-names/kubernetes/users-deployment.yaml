@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: users-deployment
+spec:
+  replicas: 1
+  selector: 
+    matchLabels:
+      app: users
+  template:
+    metadata:
+      labels:
+        app: users
+    spec:
+      containers:
+        - name: users
+          image: mrk0607/kub-demo-users:latest
+          env:
+            - name: AUTH_ADDRESS
+              # value: "10.99.104.252"
+              # 클러스터 내부에만 알 수 있는 auth 주소
+              # 패턴은 (서비스이름).(서비스가속한 네임 스페이스)
+              # 네임 스페이스를 할당하지 않으면 default로 자동 할당
+              value: "auth-service.default"
+              # 네임 스페이스란 리소스를 차별화하고, 그룹화하는 방법

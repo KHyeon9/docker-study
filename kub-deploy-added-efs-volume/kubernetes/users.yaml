@@ -1,0 +1,89 @@
+# 스토리지 클래스를 만들기 위한 셋팅
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: efs-sc
+provisioner: efs.csi.aws.com # 이 드라이버를 가리켜 클래스 구성
+---
+# EFS를 위한 영구 볼륨 추가
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: efs-pv
+spec:
+  capacity: 
+    storage: 5Gi
+  # EFS는 filesystem이기 때문에 모드 셋팅
+  volumeMode: Filesystem 
+  accessModes:
+    # 여러 노드가 이 보륨을 사용할 수 있도록 설정
+    - ReadWriteMany
+  # EFS를 위한 스토리지 클래스 설정
+  storageClassName: efs-sc
+  # csi 설정
+  csi:
+    # aws의 csi 드라이버 설정
+    driver: efs.csi.aws.com
+    # EFS의 파일시스탬 id 입력
+    # 아래는 예시값
+    volumeHandle: fs-63d17521
+---
+# 영구 볼륨을 사용하기 위한 클래임 작성
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: efs-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: efs-sc
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: users-service
+spec:
+  selector:
+    app: users
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: users-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: users
+  template:
+    metadata:
+      labels:
+        app: users
+    spec:
+      containers:
+        - name: users-api
+          image: mrk0607/kub-dep-users:latest
+          env:
+            - name: MONGODB_CONNECTION_URI
+              # 예시 db 주소
+              value: 'mongodb+srv://hyeon:wk4nFupsbntPbB3l@cluster0.ntrwp.mongodb.net/users?retryWrites=true&w=majority'
+            - name: AUTH_API_ADDRESSS
+              value: 'auth-service.default:3000'
+          # 특정 경로에 볼륨을 마운트함
+          volumeMounts:
+            - name: efs-vol
+              mountPath: /app/users # users-api의 users폴더
+      # 볼륨을 사용하기 위한 볼륨 셋팅
+      volumes:
+        - name: efs-vol
+          # 클레임 연결
+          persistentVolumeClaim: 
+            claimName: efs-pvc
